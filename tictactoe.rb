@@ -9,13 +9,17 @@ class Player
     end
 end
 
-class Board
-    attr_reader :board
+class Game
+    attr_reader :board, :win
+    attr_accessor :player1_turn
     def initialize
-        @board = {:r1 => {:c1 => "X", :c2 => ".", :c3 => "X"}, :r2 => {:c1 => ".", :c2 => ".", :c3 => "O"}, :r3 => {:c1 => ".", :c2 => ".", :c3 => "."}}
+        @board = {:r1 => {:c1 => "1", :c2 => "2", :c3 => "3"}, :r2 => {:c1 => "4", :c2 => "5", :c3 => "6"}, :r3 => {:c1 => "7", :c2 => "8", :c3 => "9"}}
+        @picked_squares = []
+        @win = false
+        @player1_turn = true
     end
 
-    def printBoard()
+    def print_board()
         line = "\u2500"
         count = 0
         @board.each do |row, cols|
@@ -27,17 +31,80 @@ class Board
         end
     end 
 
-    def updateBoard(player, position)
-        row = "r" + position[0]
-        col = "c" + position[1]
-        @board[row.to_sym][col.to_sym] = player.marker
-        printBoard()
+    def check_for_duplicate(selection)
+        @picked_squares.include? selection
     end
 
-    def CheckForWin
-       check_array = []
-       @board.each do |row, cols|
-            row.each |col, val|
+    def update_board(player, position)
+        @board.each do |row, cols|
+            cols.each do |col, val|
+                if val == position
+                    @picked_squares.push(val)
+                    @board[row][col] = player.marker
+                end
+            end
+        end
+        print_board()
+    end
+
+    def get_winner(marker)
+        if marker == $player1.marker
+            puts "#{$player1.name} Wins"
+        else
+            puts "#{$player2.name} Wins"
+        end
+    end
+
+    def check_win_conditions()
+        full_array = []
+        check_array = []
+
+        #Check for wins across ROWS
+        @board.each do |row, cols|
+            check_array = cols.values #Create array with with each individual row
+            full_array += check_array #Create array with all of the squares for later use.
+            check = check_array.uniq.size <=1
+            if check == true
+                get_winner(check_array[0])
+                @win = true
+                
+            end
+        end
+
+        #Check for wins across COLUMNS
+        check_array = full_array.group_by.with_index{|_,i| i % 3}.values
+        i = 0
+        while i <= 2
+            check = check_array[i].uniq.size <= 1
+            if check == true
+                puts check_array[i]
+                get_winner(check_array[i][0])
+                @win = true
+                return
+            end
+            i += 1
+        end
+
+        #Check fo win DIAGONALLY left to right
+        check_array = full_array.group_by.with_index{|_,i| i % 4}.values
+        check = check_array[0].uniq.size <= 1
+        if check == true
+            get_winner(check_array[0][0])
+            @win = true
+            return
+        end
+        
+        #Check fo win DIAGONALLY right to left
+        check_array = []
+        i = 2
+        while i <= 6
+            check_array.push(full_array[i])
+            i += 2
+        end
+        check = check_array.uniq.size <= 1
+        if check == true
+            get_winner(check_array[2])
+            @win = true
         end
     end
 end
@@ -83,21 +150,62 @@ def GetMarker(name)
         end
     end
 end
-board = Board.new
+game = Game.new
 
 
-
-
-
-
-board.printBoard()
 
 CreatePlayers()
+selected_error = "!!! That square was already selected, choose another !!!"
 
 puts "------------------"
 puts "Start game with these settings?"
 puts "Player One: #{$player1.name} using marker '#{$player1.marker}''"
 puts "Player One: #{$player2.name} using marker '#{$player2.marker}''"
 
-board.updateBoard($player2, "12")
-board.CheckForWin()
+puts "HOW TO PLAY"
+puts "--------------"
+puts "Starting with player 1, #{$player1.name}, type in the number you would like to place your marker in, and press enter when done."
+puts "The board will update, and the next player will be prompted to select their marker."
+puts "Press ENTER key when ready"
+puts "--------------"
+puts
+gets.chomp
+game.print_board()
+
+
+while !game.win
+    if game.player1_turn
+        while true
+            puts "#{$player1.name}, Enter the grid # you want to mark."
+            selection = gets.chomp
+            if !game.check_for_duplicate(selection)
+                game.update_board($player1, selection)
+                game.player1_turn = false
+                break
+            else
+                puts selected_error
+            end
+        end
+    elsif !game.player1_turn
+        while true
+            puts "#{$player2.name}, Enter the grid # you want to mark."
+            selection = gets.chomp
+            if !game.check_for_duplicate(selection)
+                game.update_board($player2, selection)
+                game.player1_turn = true
+                break
+            else
+                puts selected_error
+            end
+        end
+    end
+    game.check_win_conditions()
+end
+
+puts "game over"
+
+
+
+
+
+
