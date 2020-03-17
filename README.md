@@ -1,2 +1,2 @@
 # tic_tac_toe_ruby
-Console based TIc Tac Toe in Ruby
+Refactor board methods out of game class to board class and move player method into game class.
