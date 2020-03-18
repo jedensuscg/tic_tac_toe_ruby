@@ -73,13 +73,9 @@ class Game
         @player2 = Player.new(players[:Two][:name], players[:Two][:marker])
     end
 
-    
-
     def check_for_duplicate(selection)
         @picked_squares.include? selection
     end
-
-    
 
     def get_winner(marker)
         if marker == @player1.marker
