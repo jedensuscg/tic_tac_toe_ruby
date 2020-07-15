@@ -41,6 +41,8 @@ module ValidateInput
 
     def check_for_duplicate(selection, player)
         if !@picked_squares.include? selection
+            #Debug puts "dup check #{selection}"
+            #Debug puts "square picked: #{@picked_squares}"
             update_board(player, selection)
             @player1_turn = !@player1_turn
         else
@@ -77,14 +79,14 @@ module Board
         @board.each do |row, cols|
             cols.each do |col, val|
                 if val == $sc[position.to_i - 1]
-                    @picked_squares.push(val)
+                    @picked_squares.push(position)
                     @board[row][col] = player.marker
                     @round += 1
                 end
             end
         end
         clear_console()
-        puts @round
+        puts "Round: #{@round}"
         print_board()
     end
 end
